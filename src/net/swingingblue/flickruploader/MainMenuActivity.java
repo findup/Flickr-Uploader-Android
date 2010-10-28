@@ -2,6 +2,7 @@ package net.swingingblue.flickruploader;
 
 import net.swingingblue.flickruploader.adapter.ImageListArrayAdapter;
 import net.swingingblue.flickruploader.data.ImageListData;
+import net.swingingblue.flickruploader.flickrapi.FlickrLibrary;
 import android.app.Activity;
 import android.content.ContentResolver;
 import android.database.Cursor;
@@ -122,6 +123,9 @@ public class MainMenuActivity extends Activity {
 	private OnClickListener lister = new OnClickListener() {
 		
 		public void onClick(View v) {
+			// development test use.
+			FlickrLibrary flickrLib = new FlickrLibrary();
+			flickrLib.getFlob();
 		}
 	};    
 }
