@@ -98,7 +98,6 @@ public class MainMenuActivity extends Activity {
 
 		cl.moveToFirst();
 		int count = cl.getCount();
-//		textview.append("count " + count + "\n");
 
 		for (int i = 1; i < count; i++ ) {
 			// ファイルパス名を表示
