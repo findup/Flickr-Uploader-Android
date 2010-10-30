@@ -44,8 +44,6 @@ public class RestfulLib {
 			jsons = new JSONArray(json);
 			for (int i = 0; i < jsons.length(); i++) {
 			    JSONObject jsonObj = jsons.getJSONObject(i);
-//			    id = jsonObj.getInt("id");
-//			    text = jsonObj.getString("text");
 			}
 		} catch (JSONException e) {
 			e.printStackTrace();
@@ -80,7 +78,6 @@ public class RestfulLib {
 		try {
 			url = new URL(builder.toString());
 		} catch (MalformedURLException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		
@@ -88,7 +85,10 @@ public class RestfulLib {
 	}
 
 	
-	private void httpGet(String uri) {
+	public static String httpGet(String uri) {
+		
+		String entity = null;
+		
 	    // HTTP GET request
 	    HttpUriRequest httpGet = new HttpGet(uri);
 	    
@@ -99,35 +99,15 @@ public class RestfulLib {
 			
 		    if (httpResponse.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
 		        // HTTP response
-		        String entity = EntityUtils.toString(httpResponse.getEntity());
-		        
-		        // JSON
-		        JSONObject jsonEntity;
-
-		        try {
-					jsonEntity = new JSONObject(entity);
-				
-			        if (jsonEntity != null) {
-			            JSONObject jsonResults = jsonEntity.optJSONObject("results");
-			            if (jsonResults != null) {
-			            	String longUrl = "logurl";
-			                JSONObject jsonResult = jsonResults.optJSONObject(longUrl);
-			                if (jsonResult != null) {
-			                    // 結果の代入
-			                    String shortUrl = jsonResult.optString("shortUrl");
-			                    Log.v("shortUrl", shortUrl); // http://bit.ly/5uavMY
-			                }
-			            }
-			        }
-				} catch (JSONException e) {
-					e.printStackTrace();
-				}
+		        entity = EntityUtils.toString(httpResponse.getEntity());
 		    }
 		} catch (ClientProtocolException e) {
 			e.printStackTrace();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+		
+		return entity;
 	}
 	
 }

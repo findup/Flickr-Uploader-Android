@@ -2,7 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
       android:versionCode="1"
       android:versionName="1.0" package="net.swingingblue.flickruploader">
-    <application android:icon="@drawable/icon" android:label="@string/app_name">
+    <application android:icon="@drawable/icon" android:label="@string/app_name" android:debuggable="true">
         <activity android:name=".MainMenuActivity"
                   android:label="@string/app_name">
             <intent-filter>
@@ -13,5 +13,6 @@
 
     </application>
     <uses-sdk android:minSdkVersion="7" />
+<uses-permission android:name="android.permission.INTERNET"></uses-permission>
 
 </manifest> 

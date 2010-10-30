@@ -5,6 +5,7 @@ import net.swingingblue.flickruploader.data.ImageListData;
 import net.swingingblue.flickruploader.flickrapi.FlickrLibrary;
 import android.app.Activity;
 import android.content.ContentResolver;
+import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
@@ -32,11 +33,14 @@ public class MainMenuActivity extends Activity {
 
 	// 画面部品
 	private Button btnPick;
+	private Button btnAfterAuth;
 	private ListView listview;
 	private TextView textview;
 	
 	private ImageListArrayAdapter listadapter;
 
+	FlickrLibrary flickrLib;
+	
 	private static final String LOG_TAG = MainMenuActivity.class.getSimpleName();
 	
 	/** Called when the activity is first created. */
@@ -48,6 +52,9 @@ public class MainMenuActivity extends Activity {
 		
 		btnPick = (Button)findViewById(R.id.BtnPick);
 		btnPick.setOnClickListener(lister);
+
+		btnAfterAuth = (Button)findViewById(R.id.ButtonCompleteAuth);
+		btnAfterAuth.setOnClickListener(afterAuthListener);
 		
 		listview = (ListView)findViewById(R.id.ListView);
 		listadapter = new ImageListArrayAdapter(this, R.layout.list_picture);
@@ -78,6 +85,9 @@ public class MainMenuActivity extends Activity {
 		});
 		
 		textview = (TextView)findViewById(R.id.TextViewLog);
+
+		// flickr ライブラリ初期化
+		flickrLib = new FlickrLibrary(getApplicationContext());
 		
 		super.onCreate(savedInstanceState);
 	}
@@ -123,8 +133,24 @@ public class MainMenuActivity extends Activity {
 		
 		public void onClick(View v) {
 			// development test use.
-			FlickrLibrary flickrLib = new FlickrLibrary();
 			flickrLib.getFlob();
+			
+			if (flickrLib.checkToken() == false) {
+				Uri uri = flickrLib.redirectAuthPage();
+				
+				Intent i = new Intent(Intent.ACTION_VIEW, uri);
+				startActivity(i);
+			}
 		}
 	};    
+	
+	private OnClickListener afterAuthListener = new OnClickListener() {
+		
+		@Override
+		public void onClick(View v) {
+			flickrLib.getToken();
+			flickrLib.checkToken();
+		}
+	};
+	
 }
