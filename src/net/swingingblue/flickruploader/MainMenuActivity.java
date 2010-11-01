@@ -1,15 +1,22 @@
 package net.swingingblue.flickruploader;
 
+import java.lang.reflect.Array;
+import java.util.ArrayList;
+
 import net.swingingblue.flickruploader.adapter.ImageListArrayAdapter;
 import net.swingingblue.flickruploader.data.ImageListData;
 import net.swingingblue.flickruploader.flickrapi.FlickrLibrary;
+import net.swingingblue.flickruploader.flickrapi.FlickrLibrary.UploadProgressListner;
 import android.app.Activity;
+import android.app.ProgressDialog;
 import android.content.ContentResolver;
 import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.Handler;
 import android.provider.MediaStore;
 import android.util.Log;
 import android.view.View;
@@ -33,9 +40,10 @@ public class MainMenuActivity extends Activity {
 
 	// 画面部品
 	private Button btnPick;
-	private Button btnAfterAuth;
+	private Button btnUpload;
 	private ListView listview;
 	private TextView textview;
+	private ProgressDialog progressDialog;
 	
 	private ImageListArrayAdapter listadapter;
 
@@ -51,10 +59,10 @@ public class MainMenuActivity extends Activity {
 		setContentView(R.layout.picturepicker);
 		
 		btnPick = (Button)findViewById(R.id.BtnPick);
-		btnPick.setOnClickListener(lister);
+		btnPick.setOnClickListener(authBtnListener);
 
-		btnAfterAuth = (Button)findViewById(R.id.ButtonCompleteAuth);
-		btnAfterAuth.setOnClickListener(afterAuthListener);
+		btnUpload = (Button)findViewById(R.id.ButtonUpload);
+		btnUpload.setOnClickListener(uploadBtnListener);
 		
 		listview = (ListView)findViewById(R.id.ListView);
 		listadapter = new ImageListArrayAdapter(this, R.layout.list_picture);
@@ -89,6 +97,8 @@ public class MainMenuActivity extends Activity {
 		// flickr ライブラリ初期化
 		flickrLib = new FlickrLibrary(getApplicationContext());
 		
+		progressDialog = new ProgressDialog(this);
+
 		super.onCreate(savedInstanceState);
 	}
     
@@ -129,7 +139,7 @@ public class MainMenuActivity extends Activity {
 	}
     
 	
-	private OnClickListener lister = new OnClickListener() {
+	private OnClickListener authBtnListener = new OnClickListener() {
 		
 		public void onClick(View v) {
 			// development test use.
@@ -140,17 +150,74 @@ public class MainMenuActivity extends Activity {
 				
 				Intent i = new Intent(Intent.ACTION_VIEW, uri);
 				startActivity(i);
+			} else {
+				Toast.makeText(getApplicationContext(), "Already authentificated.", Toast.LENGTH_LONG).show();
 			}
 		}
 	};    
 	
-	private OnClickListener afterAuthListener = new OnClickListener() {
+	/**
+	 * UploadボタンClick
+	 */
+	private OnClickListener uploadBtnListener = new OnClickListener() {
 		
 		@Override
 		public void onClick(View v) {
-			flickrLib.getToken();
-			flickrLib.checkToken();
+			ArrayList<Uri> checkedList = new ArrayList<Uri>();
+			// リストの中からチェックがついたものを列挙
+			int count = listadapter.getCount();
+			for (int i = 0; i < count; i++) {
+				if (listadapter.getItem(i).isCheck()) {
+					checkedList.add(listadapter.getItem(i).getUri());
+				}
+			}
+			
+			Handler handler = new Handler();
+			handler.post(new Runnable() {
+				
+				@Override
+				public void run() {
+					progressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+					progressDialog.setMax(100);
+					progressDialog.show();
+					
+				}
+			});
+			
+			AsyncUpload asyncUpload = new AsyncUpload();
+			asyncUpload.execute(checkedList);
+			
 		}
 	};
+	
+	private class AsyncUpload extends AsyncTask<ArrayList<Uri>, Long, Void> {
+
+		@Override
+		protected void onProgressUpdate(Long... values) {
+			// TODO Auto-generated method stub
+			super.onProgressUpdate(values);
+			progressDialog.setProgress(values[0].intValue());
+		}
+
+		@Override
+		protected void onPostExecute(Void result) {
+			super.onPostExecute(result);
+			progressDialog.dismiss();
+			Toast.makeText(getApplicationContext(), "Upload complete.", Toast.LENGTH_SHORT).show();
+		}
+
+		@Override
+		protected Void doInBackground(ArrayList<Uri>... params) {
+			flickrLib.upload(params[0], new UploadProgressListner() {
+				
+				@Override
+				public void onProgress(long countByte, long size) {
+					publishProgress(Long.valueOf(((countByte * 100) /size)));
+				}
+			});
+			return null;
+		}
+		
+	}
 	
 }

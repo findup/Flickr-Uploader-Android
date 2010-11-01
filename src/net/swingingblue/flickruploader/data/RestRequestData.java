@@ -14,7 +14,7 @@ public class RestRequestData {
 	private String path;
 	
 	// クエリーパラメータ
-	Map<String, String> queryParam;
+	Map<String, Object> queryParam;
 	
 
 	public String getScheme() {
@@ -41,11 +41,11 @@ public class RestRequestData {
 		this.path = path;
 	}
 
-	public Map<String, String> getQueryParam() {
+	public Map<String, Object> getQueryParam() {
 		return queryParam;
 	}
 
-	public void setQueryParam(Map<String, String> queryParam) {
+	public void setQueryParam(Map<String, Object> queryParam) {
 		this.queryParam = queryParam;
 	}
 
