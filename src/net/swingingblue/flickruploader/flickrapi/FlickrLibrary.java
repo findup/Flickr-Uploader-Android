@@ -65,8 +65,8 @@ public class FlickrLibrary {
 	private static final String AUTH_CHECK_TOKEN = "flickr.auth.checkToken";
 	
 	// for Development only.
-	private static final String apiKey ="fabe03eede6638eabe357a8be3ddc84a";
-	private static final String secretKey = "a6745c71e56f4f6c";
+	private static final String apiKey ="";
+	private static final String secretKey = "";
 	
 	// authentic data
 	private String frob = "";
