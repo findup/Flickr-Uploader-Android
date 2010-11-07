@@ -99,6 +99,9 @@ public class MainMenuActivity extends Activity {
 		
 		progressDialog = new ProgressDialog(this);
 
+		// flickr認証処理
+		autholization();
+		
 		super.onCreate(savedInstanceState);
 	}
     
@@ -114,13 +117,14 @@ public class MainMenuActivity extends Activity {
 		}
 		
 		ContentResolver cr = getContentResolver();
-		Cursor cl = MediaStore.Images.Media.query(cr, MediaStore.Images.Media.EXTERNAL_CONTENT_URI, null);
+		Cursor cl = MediaStore.Images.Media.query(cr, MediaStore.Images.Media.EXTERNAL_CONTENT_URI, null, null, "date_added desc");
 
 		cl.moveToFirst();
 		int count = cl.getCount();
 
 		for (int i = 1; i < count; i++ ) {
 			// ファイルパス名を表示
+//			String[] columns = cl.getColumnNames();
 			Log.d(LOG_TAG, "now " + i + " " + cl.getString(1));
 
 			ImageListData listdata = new ImageListData();
@@ -142,17 +146,6 @@ public class MainMenuActivity extends Activity {
 	private OnClickListener authBtnListener = new OnClickListener() {
 		
 		public void onClick(View v) {
-			// development test use.
-			flickrLib.getFlob();
-			
-			if (flickrLib.checkToken() == false) {
-				Uri uri = flickrLib.redirectAuthPage();
-				
-				Intent i = new Intent(Intent.ACTION_VIEW, uri);
-				startActivity(i);
-			} else {
-				Toast.makeText(getApplicationContext(), "Already authentificated.", Toast.LENGTH_LONG).show();
-			}
 		}
 	};    
 	
@@ -220,4 +213,21 @@ public class MainMenuActivity extends Activity {
 		
 	}
 	
+	/**
+	 * FlickeのTokenが登録済みなら認証を試みる。
+	 * Tokenが無い、もしくは期限切れの場合はFliekcrの認証ページへリダイレクトする
+	 */
+	private void autholization() {
+		
+		flickrLib.getFlob();
+		
+		if (flickrLib.checkToken() == false) {
+			Uri uri = flickrLib.redirectAuthPage();
+			
+			Intent i = new Intent(Intent.ACTION_VIEW, uri);
+			startActivity(i);
+		} else {
+			Toast.makeText(getApplicationContext(), "authentificated.", Toast.LENGTH_LONG).show();
+		}
+	}
 }
