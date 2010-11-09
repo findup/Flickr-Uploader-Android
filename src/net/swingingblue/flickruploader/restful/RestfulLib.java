@@ -1,9 +1,11 @@
 package net.swingingblue.flickruploader.restful;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -18,6 +20,7 @@ import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpUriRequest;
+import org.apache.http.entity.mime.content.FileBody;
 import org.apache.http.entity.mime.content.InputStreamBody;
 import org.apache.http.entity.mime.content.StringBody;
 import org.apache.http.impl.client.DefaultHttpClient;
@@ -197,15 +200,21 @@ public class RestfulLib {
 			
 			try {
 				if (map.getValue() instanceof String) {
-					multiEntity.addPart(map.getKey(), new StringBody(map.getValue().toString()));
-				} else if (map.getValue() instanceof InputStream) {
-					InputStream is = (InputStream)map.getValue();
-					multiEntity.addPart(map.getKey(), new InputStreamBody(is, "filename"));
+					if (map.getKey().equals("photo")) {
+						multiEntity.addPart(map.getKey(), new FileBody(new File(map.getValue().toString())));
+					} else {
+						multiEntity.addPart(map.getKey(), new StringBody(map.getValue().toString()));
+					}
+				} else if (map.getValue() instanceof URI) {
+					URI uri = (URI)map.getValue();
+					multiEntity.addPart(map.getKey(), new FileBody(new File(uri)));
 				}
 			} catch (UnsupportedEncodingException e) {
 				e.printStackTrace();
 			}
 		}
+
+		long length = multiEntity.getContentLength();
 		
 		httpPost.setEntity(multiEntity);
 	    

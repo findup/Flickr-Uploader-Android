@@ -99,14 +99,14 @@ public class MainMenuActivity extends Activity {
 		
 		progressDialog = new ProgressDialog(this);
 
-		// flickr認証処理
-		autholization();
-		
 		super.onCreate(savedInstanceState);
 	}
     
 	@Override
 	protected void onResume() {
+		
+		// flickr認証処理
+		autholization();
 		
 		// SDが刺さっているかチェック
 		if (!Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)){
@@ -120,6 +120,9 @@ public class MainMenuActivity extends Activity {
 		Cursor cl = MediaStore.Images.Media.query(cr, MediaStore.Images.Media.EXTERNAL_CONTENT_URI, null, null, "date_added desc");
 
 		cl.moveToFirst();
+		String[] columns = cl.getColumnNames();
+		
+		// [_id, _data, _size, _display_name, mime_type, title, date_added, date_modified, description, picasa_id, isprivate, latitude, longitude, datetaken, orientation, mini_thumb_magic, bucket_id, bucket_display_name, micro_thumb_id, sd_serial]
 		int count = cl.getCount();
 
 		for (int i = 1; i < count; i++ ) {
@@ -156,12 +159,12 @@ public class MainMenuActivity extends Activity {
 		
 		@Override
 		public void onClick(View v) {
-			ArrayList<Uri> checkedList = new ArrayList<Uri>();
+			ArrayList<String> checkedList = new ArrayList<String>();
 			// リストの中からチェックがついたものを列挙
 			int count = listadapter.getCount();
 			for (int i = 0; i < count; i++) {
 				if (listadapter.getItem(i).isCheck()) {
-					checkedList.add(listadapter.getItem(i).getUri());
+					checkedList.add(listadapter.getItem(i).getPath());
 				}
 			}
 			
@@ -171,7 +174,7 @@ public class MainMenuActivity extends Activity {
 				@Override
 				public void run() {
 					progressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
-					progressDialog.setMax(100);
+//					progressDialog.setMax(100);
 					progressDialog.show();
 					
 				}
@@ -183,11 +186,10 @@ public class MainMenuActivity extends Activity {
 		}
 	};
 	
-	private class AsyncUpload extends AsyncTask<ArrayList<Uri>, Long, Void> {
+	private class AsyncUpload extends AsyncTask<ArrayList<String>, Long, Void> {
 
 		@Override
 		protected void onProgressUpdate(Long... values) {
-			// TODO Auto-generated method stub
 			super.onProgressUpdate(values);
 			progressDialog.setProgress(values[0].intValue());
 		}
@@ -200,12 +202,13 @@ public class MainMenuActivity extends Activity {
 		}
 
 		@Override
-		protected Void doInBackground(ArrayList<Uri>... params) {
+		protected Void doInBackground(ArrayList<String>... params) {
 			flickrLib.upload(params[0], new UploadProgressListner() {
 				
 				@Override
 				public void onProgress(long countByte, long size) {
-					publishProgress(Long.valueOf(((countByte * 100) /size)));
+//					progressDialog.setMax(size);
+					publishProgress(countByte);
 				}
 			});
 			return null;
@@ -213,6 +216,15 @@ public class MainMenuActivity extends Activity {
 		
 	}
 	
+	@Override
+	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+		
+		// Tokenを保存
+		flickrLib.getToken();
+		
+		super.onActivityResult(requestCode, resultCode, data);
+	}
+
 	/**
 	 * FlickeのTokenが登録済みなら認証を試みる。
 	 * Tokenが無い、もしくは期限切れの場合はFliekcrの認証ページへリダイレクトする
@@ -225,7 +237,7 @@ public class MainMenuActivity extends Activity {
 			Uri uri = flickrLib.redirectAuthPage();
 			
 			Intent i = new Intent(Intent.ACTION_VIEW, uri);
-			startActivity(i);
+			startActivityForResult(i, 0);
 		} else {
 			Toast.makeText(getApplicationContext(), "authentificated.", Toast.LENGTH_LONG).show();
 		}
