@@ -1,6 +1,5 @@
 package net.swingingblue.flickruploader;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 
 import net.swingingblue.flickruploader.adapter.ImageListArrayAdapter;
@@ -24,7 +23,6 @@ import android.view.View.OnClickListener;
 import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
-import android.widget.AdapterView.OnItemSelectedListener;
 import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
