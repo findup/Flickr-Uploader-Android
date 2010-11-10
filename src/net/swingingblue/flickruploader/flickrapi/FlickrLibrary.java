@@ -1,9 +1,12 @@
 package net.swingingblue.flickruploader.flickrapi;
 
+import java.io.FileDescriptor;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -15,6 +18,7 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.logging.SocketHandler;
 
+import org.apache.http.client.utils.URIUtils;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -26,6 +30,7 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.net.Uri;
+import android.os.ParcelFileDescriptor;
 import android.test.IsolatedContext;
 import android.util.Log;
 import android.widget.Toast;
@@ -65,8 +70,8 @@ public class FlickrLibrary {
 	private static final String AUTH_CHECK_TOKEN = "flickr.auth.checkToken";
 	
 	// for Development only.
-	private static final String apiKey ="fabe03eede6638eabe357a8be3ddc84a";
-	private static final String secretKey = "a6745c71e56f4f6c";
+	private static final String apiKey ="";
+	private static final String secretKey = "";
 	
 	// authentic data
 	private String frob = "";
@@ -190,7 +195,7 @@ public class FlickrLibrary {
 	 * ファイルをアップロードする
 	 * @param urlList
 	 */
-	public String upload(List<Uri> uriList, final UploadProgressListner listner) {
+	public String upload(List<String> uriList, final UploadProgressListner listner) {
 		
 		String response = null;
 
@@ -205,9 +210,20 @@ public class FlickrLibrary {
 
 		InputStream is = null;
 		try {
-			is = context.getContentResolver().openInputStream(uriList.get(0));
-		
-			map.put(paramPhoto, is);
+//			ParcelFileDescriptor pfd = context.getContentResolver().openFileDescriptor(uriList.get(0), "r");
+//			long size = pfd.getStatSize();
+//			try {
+//				pfd.close();
+//			} catch (IOException e) {
+//				e.printStackTrace();
+//			}
+			
+//			is = context.getContentResolver().openInputStream(uriList.get(0));
+			
+			String path = null;
+			path = uriList.get(0);
+			
+			map.put(paramPhoto, path);
 			
 			RestRequestData request = new RestRequestData();
 			request.setUrl(baseUrl);
@@ -217,22 +233,15 @@ public class FlickrLibrary {
 			response = RestfulLib.httpPostRequestMultipart(request, new ProgressListener() {
 				
 				@Override
-				public void transferred(long num) {
+				public void transferred(long num, long contentLength) {
 					Log.d(LOG_TAG, num + " byte written.");
-					listner.onProgress(num, 2000000L);
+					listner.onProgress(num, contentLength);
 				}
 			});
+		} catch (Exception e) {
 			
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-		} finally {
-			try {
-				is.close();
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
 		}
-		
+
 		return "";
 //		return parseUpload(response);
 	}
@@ -443,4 +452,3 @@ public class FlickrLibrary {
 		void onProgress(long countByte, long size);
 	}
 }
-

@@ -16,6 +16,7 @@ import org.apache.http.entity.mime.MultipartEntity;
 public class CountingMultipartEntity extends MultipartEntity  {
 
     private final ProgressListener listener;
+    private long contentLength = 0;
 
     public CountingMultipartEntity(final ProgressListener listener) {
         super();
@@ -35,36 +36,48 @@ public class CountingMultipartEntity extends MultipartEntity  {
 
     @Override
     public void writeTo(final OutputStream outstream) throws IOException {
-        super.writeTo(new CountingOutputStream(outstream, this.listener));
+        super.writeTo(new CountingOutputStream(outstream, this.listener, this.contentLength));
     }
 
+    @Override
+	public long getContentLength() {
+		this.contentLength = super.getContentLength();
+		return this.contentLength;
+	}
+
+    /**
+     * POST通信中コールバック interface
+     * @author findup
+     */
     public static interface ProgressListener {
-        void transferred(long num);
+        void transferred(long num, long totalsize);
     }
 
-    public static class CountingOutputStream extends FilterOutputStream {
+	public static class CountingOutputStream extends FilterOutputStream {
 
         private final ProgressListener listener;
         private long transferred;
+        private final long contentLength;
 
         public CountingOutputStream(final OutputStream out,
-                final ProgressListener listener) {
+                final ProgressListener listener,
+                final long contentLength) {
             super(out);
             this.listener = listener;
             this.transferred = 0;
+            this.contentLength = contentLength;
         }
-
 
         public void write(byte[] b, int off, int len) throws IOException {
             out.write(b, off, len);
             this.transferred += len;
-            this.listener.transferred(this.transferred);
+            this.listener.transferred(this.transferred, this.contentLength);
         }
 
         public void write(int b) throws IOException {
             out.write(b);
             this.transferred++;
-            this.listener.transferred(this.transferred);
+            this.listener.transferred(this.transferred, this.contentLength);
         }
     }
 }
