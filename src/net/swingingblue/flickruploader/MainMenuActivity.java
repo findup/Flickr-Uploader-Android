@@ -166,32 +166,25 @@ public class MainMenuActivity extends Activity {
 				}
 			}
 			
-			Handler handler = new Handler();
-			handler.post(new Runnable() {
-				
-				@Override
-				public void run() {
-					progressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
-//					progressDialog.setMax(100);
-					progressDialog.show();
-					
-				}
-			});
-			
 			AsyncUpload asyncUpload = new AsyncUpload();
 			asyncUpload.execute(checkedList);
-			
 		}
 	};
 	
 	private class AsyncUpload extends AsyncTask<ArrayList<String>, Long, Void> {
 
+		/**
+		 * バックグラウンド処理からのコールバック（UIスレッド）
+		 */
 		@Override
 		protected void onProgressUpdate(Long... values) {
 			super.onProgressUpdate(values);
-			progressDialog.setProgress(values[0].intValue());
+			progressDialog.setProgress(values[0].intValue() / 100);
 		}
 
+		/**
+		 * 後処理（UIスレッド）
+		 */
 		@Override
 		protected void onPostExecute(Void result) {
 			super.onPostExecute(result);
@@ -199,16 +192,33 @@ public class MainMenuActivity extends Activity {
 			Toast.makeText(getApplicationContext(), "Upload complete.", Toast.LENGTH_SHORT).show();
 		}
 
+		/**
+		 * 前処理（UIスレッド）
+		 */
+		@Override
+		protected void onPreExecute() {
+			super.onPreExecute();
+			
+			progressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+//			progressDialog.setMax(100);
+			progressDialog.setMessage("Uploading...");
+			progressDialog.show();
+		}
+
+		/**
+		 * 実際のバックグラウンド処理
+		 */
 		@Override
 		protected Void doInBackground(ArrayList<String>... params) {
 			flickrLib.upload(params[0], new UploadProgressListner() {
 				
 				@Override
 				public void onProgress(long countByte, long size) {
-//					progressDialog.setMax(size);
+					progressDialog.setMax((int)(size / 100));
 					publishProgress(countByte);
 				}
 			});
+			
 			return null;
 		}
 		

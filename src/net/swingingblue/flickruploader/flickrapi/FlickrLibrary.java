@@ -1,12 +1,7 @@
 package net.swingingblue.flickruploader.flickrapi;
 
-import java.io.FileDescriptor;
-import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.net.URL;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -16,9 +11,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeMap;
-import java.util.logging.SocketHandler;
-
-import org.apache.http.client.utils.URIUtils;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -30,10 +22,7 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.net.Uri;
-import android.os.ParcelFileDescriptor;
-import android.test.IsolatedContext;
 import android.util.Log;
-import android.widget.Toast;
 
 /**
  * Flickr Access API
