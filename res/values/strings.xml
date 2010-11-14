@@ -1,5 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="hello">Hello World, MainMenuActivity!</string>
+    
     <string name="app_name">Flickr Uploader</string>
+<string name="notify_required_auth">flickrのサイトにリダイレクトします。</string>
+<string name="title_required_auth">認証が必要です</string>
+<string name="auth_err">認証できませんでした</string>
+<string name="authorization">認証</string>
+<string name="no_sd_card">SDカードがありません</string>
+<string name="uploading">アップロード中</string>
 </resources>

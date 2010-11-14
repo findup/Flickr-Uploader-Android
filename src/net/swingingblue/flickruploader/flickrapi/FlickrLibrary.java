@@ -59,8 +59,8 @@ public class FlickrLibrary {
 	private static final String AUTH_CHECK_TOKEN = "flickr.auth.checkToken";
 	
 	// for Development only.
-	private static final String apiKey ="";
-	private static final String secretKey = "";
+	private static final String apiKey ="fabe03eede6638eabe357a8be3ddc84a";
+	private static final String secretKey = "a6745c71e56f4f6c";
 	
 	// authentic data
 	private String frob = "";
@@ -125,7 +125,7 @@ public class FlickrLibrary {
 	 * 認証用トークン取得要求
 	 * Webでの認証後に呼び出される
 	 */
-	public void getToken() {
+	public boolean getToken() {
 		// http://flickr.com/services/rest/?method=flickr.auth.getToken&api_key=987654321&frob=1a2b3c4d5e&api_sig=7f3870be274f6c49b3e31a0c6728957f.
 		TreeMap<String , Object> map = new TreeMap<String, Object>();
 		
@@ -142,7 +142,8 @@ public class FlickrLibrary {
 
 		URL url = RestfulLib.makeUrl(request);
 		String response = RestfulLib.httpGetRequest(url.toString());
-		parseToken(response);
+		
+		return parseToken(response);
 	}
 	
 	
@@ -184,7 +185,7 @@ public class FlickrLibrary {
 	 * ファイルをアップロードする
 	 * @param urlList
 	 */
-	public String upload(List<String> uriList, final UploadProgressListner listner) {
+	public String upload(String uri, final UploadProgressListner listner) {
 		
 		String response = null;
 
@@ -193,7 +194,7 @@ public class FlickrLibrary {
 		map.put(paramApiKey, apiKey);
 		map.put(paramResponseFormat, jsonFormat);
 		map.put(paramAuthToken, this.token);
-		map.put(paramTitle, "upload test");
+		map.put(paramTitle, "");
 		map.put(paramIsPublic, "0");
 		map.put(paramApiSig, makeToken(map));
 
@@ -210,7 +211,7 @@ public class FlickrLibrary {
 //			is = context.getContentResolver().openInputStream(uriList.get(0));
 			
 			String path = null;
-			path = uriList.get(0);
+			path = uri;
 			
 			map.put(paramPhoto, path);
 			
@@ -347,7 +348,8 @@ public class FlickrLibrary {
 	 * 認証トークンの解析
 	 * @param entity
 	 */
-	private void parseToken(String entity) {
+	private boolean parseToken(String entity) {
+		boolean retval = false;
 		entity = removeJsonPrefix(entity);
         JSONObject jsonEntity;
 
@@ -359,21 +361,25 @@ public class FlickrLibrary {
 	        	
             	if (!jsonEntity.optString("stat").equals("ok")) {
             		Log.d(LOG_TAG, "failed. : " + jsonEntity.getString("message"));
-            	}
-            	
-            	JSONObject jsonToken = jsonEntity.optJSONObject("auth").optJSONObject("token");
-            	if (jsonToken != null) {
-                	this.token = jsonToken.optString("_content");
-                	
-                	SharedPreferences preference = context.getSharedPreferences(PREFERENCE_NAME, Context.MODE_PRIVATE);
-                	Editor editor = preference.edit();
-                	editor.putString("token", this.token);
-                	editor.commit();
+            	} else {
+                	JSONObject jsonToken = jsonEntity.optJSONObject("auth").optJSONObject("token");
+                	if (jsonToken != null) {
+                    	this.token = jsonToken.optString("_content");
+                    	
+                    	SharedPreferences preference = context.getSharedPreferences(PREFERENCE_NAME, Context.MODE_PRIVATE);
+                    	Editor editor = preference.edit();
+                    	editor.putString("token", this.token);
+                    	editor.commit();
+                    	
+                    	retval = true;
+                	}
             	}
 	        }
 		} catch (JSONException e) {
 			e.printStackTrace();
 		}
+		
+		return retval;
 	}
 	
 	/**

@@ -1,8 +1,6 @@
 package net.swingingblue.flickruploader.adapter;
 
-import java.io.IOException;
 import java.util.List;
-import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -11,19 +9,14 @@ import net.swingingblue.flickruploader.data.ImageListData;
 import net.swingingblue.flickruploader.util.BitmapUtil;
 import android.content.Context;
 import android.graphics.Bitmap;
-import android.os.AsyncTask;
 import android.os.Handler;
-import android.os.Message;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.CheckBox;
-import android.widget.CompoundButton;
-import android.widget.CompoundButton.OnCheckedChangeListener;
 import android.widget.ImageView;
-import android.widget.ListView;
 import android.widget.TextView;
 
 /**
@@ -44,10 +37,17 @@ public class ImageListArrayAdapter extends ArrayAdapter<ImageListData> {
 	LayoutInflater inflater;
 	ExecutorService execute = Executors.newSingleThreadExecutor();
 
-	AsyncPictureDecoder async = new AsyncPictureDecoder();
+//	AsyncPictureDecoder async = new AsyncPictureDecoder();
 	
 	final Handler handler = new Handler();	
 	
+	/** ListViewがスクロール中かどうかの状態を保持 */
+	private boolean isScrolling = false;
+	
+	public void setScrolling(boolean isScrolling) {
+		this.isScrolling = isScrolling;
+	}
+
 	/**
 	 * すでにList<ImageListData>が存在する場合に指定するコンストラクタ
 	 * @param context
@@ -106,53 +106,58 @@ public class ImageListArrayAdapter extends ArrayAdapter<ImageListData> {
 		if (listdata.getBitmap() == null) {
 			
 //			async.execute(listdata);
-			
-			execute.submit(new ThreadPictureDecoder(listdata));
+			// ListViewがスクロールしているときは画像は表示しない。スクロールが止まった時のみデコードする
+			if (isScrolling == false) {
+				execute.submit(new ThreadPictureDecoder(listdata));
+			}
 		
 		} else {
 			holder.icon.setImageBitmap(listdata.getBitmap());
 		}
 		
-		holder.text.setText(listdata.getUri().toString());
+		holder.text.setText(listdata.getPath().toString());
 		holder.checkbox.setChecked(listdata.isCheck());
 		
 		return view;
 	}
 
 	
-	private class AsyncPictureDecoder extends AsyncTask<ImageListData, ImageListData, ImageListData> {
+//	private class AsyncPictureDecoder extends AsyncTask<ImageListData, ImageListData, ImageListData> {
+//
+//		@Override
+//		protected ImageListData doInBackground(ImageListData... param) {
+//			
+//			try {
+//				final ImageListData listdata = param[0];
+//				Log.d(LOG_TAG, "Thread running " + listdata.getUri());
+//				
+//				final Bitmap bitmap = BitmapUtil.getBitmap(getContext(), listdata.getUri());
+//				listdata.setBitmap(bitmap);
+//				
+//				Log.d(LOG_TAG, "Thread end " + listdata.getUri());
+//			} catch (IOException e1) {
+//				Log.e(LOG_TAG, "Error", e1);
+//				e1.printStackTrace();
+//			} catch (Exception e) {
+//				Log.e(LOG_TAG, "Error", e);
+//				e.printStackTrace();
+//			}
+//			
+//			return null;
+//		}
+//
+//		@Override
+//		protected void onPostExecute(ImageListData result) {
+//			Log.d(LOG_TAG, "Handler running " + result.getUri());
+//			notifyDataSetChanged();
+//			
+//			super.onPostExecute(result);
+//		}
+//	}
 
-		@Override
-		protected ImageListData doInBackground(ImageListData... param) {
-			
-			try {
-				final ImageListData listdata = param[0];
-				Log.d(LOG_TAG, "Thread running " + listdata.getUri());
-				
-				final Bitmap bitmap = BitmapUtil.getBitmap(getContext(), listdata.getUri());
-				listdata.setBitmap(bitmap);
-				
-				Log.d(LOG_TAG, "Thread end " + listdata.getUri());
-			} catch (IOException e1) {
-				Log.e(LOG_TAG, "Error", e1);
-				e1.printStackTrace();
-			} catch (Exception e) {
-				Log.e(LOG_TAG, "Error", e);
-				e.printStackTrace();
-			}
-			
-			return null;
-		}
-
-		@Override
-		protected void onPostExecute(ImageListData result) {
-			Log.d(LOG_TAG, "Handler running " + result.getUri());
-			notifyDataSetChanged();
-			
-			super.onPostExecute(result);
-		}
-	}
-	
+	/**
+	 * 画像デコードスレッド
+	 */
 	private class ThreadPictureDecoder implements Runnable {
 
 		private ImageListData listdata;
@@ -164,8 +169,6 @@ public class ImageListArrayAdapter extends ArrayAdapter<ImageListData> {
 
 		public void run() {
 			try {
-//				Log.d(LOG_TAG, "Thread running " + listdata.getUri());
-				
 				if (listdata.getBitmap() == null) {
 					Bitmap bitmap = BitmapUtil.getBitmap(getContext(), listdata.getUri());
 					listdata.setBitmap(bitmap);
@@ -173,19 +176,16 @@ public class ImageListArrayAdapter extends ArrayAdapter<ImageListData> {
 					handler.post(new Runnable() {
 						
 						public void run() {
-//							Log.d(LOG_TAG, "Handler running " + listdata.getUri());
 							notifyDataSetChanged();
 						}
 					});
 				} else {
 //					Log.d(LOG_TAG, "No decorded.");
 				}				
-//				Log.d(LOG_TAG, "Thread end " + listdata.getUri());
 			} catch (Exception e) {
 				Log.e(LOG_TAG, "Error", e);
 				e.printStackTrace();
 			}
-
 		}
 	}
 	

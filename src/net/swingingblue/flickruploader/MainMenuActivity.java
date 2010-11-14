@@ -1,33 +1,34 @@
 package net.swingingblue.flickruploader;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.Iterator;
 
 import net.swingingblue.flickruploader.adapter.ImageListArrayAdapter;
 import net.swingingblue.flickruploader.data.ImageListData;
 import net.swingingblue.flickruploader.flickrapi.FlickrLibrary;
 import net.swingingblue.flickruploader.flickrapi.FlickrLibrary.UploadProgressListner;
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.ContentResolver;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
-import android.os.Handler;
 import android.provider.MediaStore;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
-import android.widget.AdapterView.OnItemSelectedListener;
 import android.widget.Button;
 import android.widget.ListView;
-import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.AbsListView.OnScrollListener;
 
@@ -39,17 +40,17 @@ import android.widget.AbsListView.OnScrollListener;
 public class MainMenuActivity extends Activity {
 
 	// 画面部品
-	private Button btnPick;
 	private Button btnUpload;
 	private ListView listview;
-	private TextView textview;
 	private ProgressDialog progressDialog;
 	
 	private ImageListArrayAdapter listadapter;
 
-	FlickrLibrary flickrLib;
+	private FlickrLibrary flickrLib;
 	
 	private static final String LOG_TAG = MainMenuActivity.class.getSimpleName();
+	/** StartActivityForResult()でブラウザ起動時に使う定数 */
+	private static final int FLICKR_AUTH_REQUEST_CODE = 1234;
 	
 	/** Called when the activity is first created. */
     @Override
@@ -58,11 +59,10 @@ public class MainMenuActivity extends Activity {
 
 		setContentView(R.layout.picturepicker);
 		
-		btnPick = (Button)findViewById(R.id.BtnPick);
-		btnPick.setOnClickListener(authBtnListener);
-
 		btnUpload = (Button)findViewById(R.id.ButtonUpload);
 		btnUpload.setOnClickListener(uploadBtnListener);
+		// 認証が終わるまでは押せない
+		btnUpload.setEnabled(false);
 		
 		listview = (ListView)findViewById(R.id.ListView);
 		listadapter = new ImageListArrayAdapter(this, R.layout.list_picture);
@@ -73,12 +73,18 @@ public class MainMenuActivity extends Activity {
 			public void onScrollStateChanged(AbsListView view, int scrollState) {
 				Log.d(LOG_TAG, "onScrollStateChanged state " + scrollState);
 				
-				view.invalidate();
+				// スクロール状態をAdaptorに通知。Adaptorの中からは自分で取れなさそうなので仕方なく。
+				((ImageListArrayAdapter)view.getAdapter()).setScrolling((scrollState != SCROLL_STATE_IDLE));
+
+				if (scrollState == SCROLL_STATE_IDLE) {
+					// スクロールが止まったらListViewを再表示（画像を表示）
+					view.invalidateViews();
+				}
 			}
 			
 			public void onScroll(AbsListView view, int firstVisibleItem,
 					int visibleItemCount, int totalItemCount) {
-//				Log.d(LOG_TAG, String.format("onScroll firstVisibleItem: %d, visibleItemCount %d, totalItemCount: %d", firstVisibleItem, visibleItemCount, totalItemCount));
+				Log.d(LOG_TAG, String.format("onScroll firstVisibleItem: %d, visibleItemCount %d, totalItemCount: %d", firstVisibleItem, visibleItemCount, totalItemCount));
 			}
 		});
 		
@@ -92,27 +98,24 @@ public class MainMenuActivity extends Activity {
 			}
 		});
 		
-		textview = (TextView)findViewById(R.id.TextViewLog);
-
 		// flickr ライブラリ初期化
 		flickrLib = new FlickrLibrary(getApplicationContext());
 		
 		progressDialog = new ProgressDialog(this);
 
+		// flickr認証処理
+		autholization();
+		
 		super.onCreate(savedInstanceState);
 	}
     
 	@Override
 	protected void onResume() {
 		
-		// flickr認証処理
-		autholization();
-		
 		// SDが刺さっているかチェック
 		if (!Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)){
-			Toast.makeText(this, "No SD Card.", Toast.LENGTH_SHORT).show();
+			Toast.makeText(this, R.string.no_sd_card, Toast.LENGTH_SHORT).show();
 			super.onResume();
-//			finish();
 			return;
 		}
 		
@@ -120,14 +123,11 @@ public class MainMenuActivity extends Activity {
 		Cursor cl = MediaStore.Images.Media.query(cr, MediaStore.Images.Media.EXTERNAL_CONTENT_URI, null, null, "date_added desc");
 
 		cl.moveToFirst();
-		String[] columns = cl.getColumnNames();
 		
 		// [_id, _data, _size, _display_name, mime_type, title, date_added, date_modified, description, picasa_id, isprivate, latitude, longitude, datetaken, orientation, mini_thumb_magic, bucket_id, bucket_display_name, micro_thumb_id, sd_serial]
 		int count = cl.getCount();
 
 		for (int i = 1; i < count; i++ ) {
-			// ファイルパス名を表示
-//			String[] columns = cl.getColumnNames();
 			Log.d(LOG_TAG, "now " + i + " " + cl.getString(1));
 
 			ImageListData listdata = new ImageListData();
@@ -144,13 +144,6 @@ public class MainMenuActivity extends Activity {
 		
 		super.onResume();
 	}
-    
-	
-	private OnClickListener authBtnListener = new OnClickListener() {
-		
-		public void onClick(View v) {
-		}
-	};    
 	
 	/**
 	 * UploadボタンClick
@@ -175,12 +168,25 @@ public class MainMenuActivity extends Activity {
 	
 	private class AsyncUpload extends AsyncTask<ArrayList<String>, Long, Void> {
 
+		private int count = 0;
+		private int size = 0;
+		
 		/**
 		 * バックグラウンド処理からのコールバック（UIスレッド）
 		 */
 		@Override
 		protected void onProgressUpdate(Long... values) {
 			super.onProgressUpdate(values);
+			
+			StringBuilder sb = new StringBuilder();
+			sb.append(getResources().getString(R.string.uploading));
+			sb.append(" ");
+			sb.append(this.count);
+			sb.append("/");
+			sb.append(this.size);
+			progressDialog.setMessage(sb);
+			
+			progressDialog.setMax((int)(values[1] / 100));
 			progressDialog.setProgress(values[0].intValue() / 100);
 		}
 
@@ -202,8 +208,7 @@ public class MainMenuActivity extends Activity {
 			super.onPreExecute();
 			
 			progressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
-//			progressDialog.setMax(100);
-			progressDialog.setMessage("Uploading...");
+			progressDialog.setMessage(getResources().getString(R.string.uploading));
 			progressDialog.show();
 		}
 
@@ -212,44 +217,118 @@ public class MainMenuActivity extends Activity {
 		 */
 		@Override
 		protected Void doInBackground(ArrayList<String>... params) {
-			flickrLib.upload(params[0], new UploadProgressListner() {
+			
+			ArrayList<String> list = params[0];
+			
+			Iterator<String> it = list.iterator();
+			count = 0;
+			size = list.size();
+			
+			while (it.hasNext()) {
+				count++;
 				
-				@Override
-				public void onProgress(long countByte, long size) {
-					progressDialog.setMax((int)(size / 100));
-					publishProgress(countByte);
-				}
-			});
+				String uri = it.next();
+				flickrLib.upload(uri, new UploadProgressListner() {
+					
+					@Override
+					public void onProgress(long countByte, long size) {
+						publishProgress(countByte, size);
+					}
+				});
+			}
 			
 			return null;
 		}
 		
 	}
 	
-	@Override
-	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-		
-		// Tokenを保存
-		flickrLib.getToken();
-		
-		super.onActivityResult(requestCode, resultCode, data);
-	}
-
 	/**
 	 * FlickeのTokenが登録済みなら認証を試みる。
-	 * Tokenが無い、もしくは期限切れの場合はFliekcrの認証ページへリダイレクトする
+	 * Tokenが無い、もしくは期限切れの場合はFlickrの認証ページへリダイレクトする
 	 */
 	private void autholization() {
 		
 		flickrLib.getFlob();
 		
 		if (flickrLib.checkToken() == false) {
-			Uri uri = flickrLib.redirectAuthPage();
+			// ダイアログを表示
+			AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
+			alertDialogBuilder.setTitle(R.string.title_required_auth)
+			.setCancelable(false)
+			.setMessage(R.string.notify_required_auth)
+			.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+				
+				@Override
+				public void onClick(DialogInterface dialog, int which) {
+					redirectFlickr();
+				}
+			})
+			.setNegativeButton(android.R.string.no, new DialogInterface.OnClickListener() {
+				
+				@Override
+				public void onClick(DialogInterface dialog, int which) {
+					dialog.cancel();
+				}
+			})
+			.show();
 			
-			Intent i = new Intent(Intent.ACTION_VIEW, uri);
-			startActivityForResult(i, 0);
 		} else {
+			// 認証済み
 			Toast.makeText(getApplicationContext(), "authentificated.", Toast.LENGTH_LONG).show();
+			btnUpload.setEnabled(true);
 		}
 	}
+	
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+		
+		if (btnUpload.isEnabled() == false) {
+			menu.add(Menu.NONE, R.string.authorization, Menu.NONE, R.string.authorization);
+		}
+		
+		return super.onCreateOptionsMenu(menu);
+	}
+	
+	@Override
+	public boolean onMenuItemSelected(int featureId, MenuItem item) {
+		
+		if (item.getItemId() == R.string.authorization) {
+			// flickrサイトへ
+			Toast.makeText(this,R.string.notify_required_auth, Toast.LENGTH_SHORT).show();
+			redirectFlickr();
+		}
+		
+		return super.onMenuItemSelected(featureId, item);
+	}
+
+	@Override
+	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+
+		Log.d(LOG_TAG, String.format("onActivityResult req = %d, ret = %d", requestCode, resultCode));
+		
+		// ブラウザからの認証が完了しているか
+		if (requestCode == FLICKR_AUTH_REQUEST_CODE) {
+			// Tokenを保存
+			if (flickrLib.getToken()) {
+				btnUpload.setEnabled(true);
+			} else {
+				Toast.makeText(this, R.string.auth_err, Toast.LENGTH_LONG).show();
+			}
+		}
+		
+		super.onActivityResult(requestCode, resultCode, data);
+	}
+
+	/**
+	 * ブラウザを起動してflickrの認証サイトに飛ぶ
+	 */
+	private void redirectFlickr() {
+		// flickrサイトへリダイレクト
+		Uri uri = flickrLib.redirectAuthPage();
+		
+		Intent i = new Intent(Intent.ACTION_VIEW, uri);
+		startActivityForResult(i, FLICKR_AUTH_REQUEST_CODE);
+	}
+	
+	
 }
