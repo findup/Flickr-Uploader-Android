@@ -1,5 +1,6 @@
 package net.swingingblue.flickruploader.flickrapi;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URL;
@@ -60,7 +61,7 @@ public class FlickrLibrary {
 	
 	// for Development only.
 	private static final String apiKey ="fabe03eede6638eabe357a8be3ddc84a";
-	private static final String secretKey = "a6745c71e56f4f6c";
+	private static final String secretKey = "";
 	
 	// authentic data
 	private String frob = "";
@@ -78,8 +79,9 @@ public class FlickrLibrary {
 
 	/**
 	 * 認証用のFlobを取得する
+	 * @throws IOException 
 	 */
-	public void getFlob() {
+	public void getFlob() throws IOException {
 
 		// (example)
 		// http://flickr.com/services/rest/?method=flickr.auth.getFrob&api_key=987654321&api_sig=5f3870be274f6c49b3e31a0c6728957f
@@ -124,8 +126,9 @@ public class FlickrLibrary {
 	/**
 	 * 認証用トークン取得要求
 	 * Webでの認証後に呼び出される
+	 * @throws IOException 
 	 */
-	public boolean getToken() {
+	public boolean getToken() throws IOException {
 		// http://flickr.com/services/rest/?method=flickr.auth.getToken&api_key=987654321&frob=1a2b3c4d5e&api_sig=7f3870be274f6c49b3e31a0c6728957f.
 		TreeMap<String , Object> map = new TreeMap<String, Object>();
 		
@@ -149,8 +152,9 @@ public class FlickrLibrary {
 	
 	/**
 	 * 認証Tokenが有効かどうかをチェックする
+	 * @throws IOException 
 	 */
-	public boolean checkToken() {
+	public boolean checkToken() throws IOException {
 		// alreay has Token?
 		SharedPreferences preference = context.getSharedPreferences(PREFERENCE_NAME, Context.MODE_PRIVATE);
 		this.token = preference.getString("token", null);

@@ -81,8 +81,9 @@ public class RestfulLib {
 	 * HTTPの要求(GET/POST)を投げてレスポンスを取得する
 	 * @param request
 	 * @return
+	 * @throws IOException 
 	 */
-	public String httpGetrequset(RestRequestData request) {
+	public String httpGetrequset(RestRequestData request) throws IOException {
 		return httpGetRequest(makeUrl(request).toString());
 	}
 	
@@ -91,8 +92,9 @@ public class RestfulLib {
 	 * @param method
 	 * @param uri
 	 * @return
+	 * @throws IOException 
 	 */
-	public static String httpGetRequest(String uri) {
+	public static String httpGetRequest(String uri) throws IOException {
 		
 		String entity = null;
 		HttpUriRequest httpRequest = null;
@@ -111,8 +113,6 @@ public class RestfulLib {
 		    }
 		} catch (ClientProtocolException e) {
 			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
 		}
 		
 		return entity;
@@ -125,8 +125,9 @@ public class RestfulLib {
 	 * @param method
 	 * @param uri
 	 * @return
+	 * @throws IOException 
 	 */
-	public static String httpPostRequest(RestRequestData request) {
+	public static String httpPostRequest(RestRequestData request) throws IOException {
 		
 		String entity = null;
 		HttpPost httpPost = null;
@@ -162,8 +163,6 @@ public class RestfulLib {
 		    }
 		} catch (ClientProtocolException e) {
 			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
 		}
 		
 		return entity;
@@ -175,8 +174,9 @@ public class RestfulLib {
 	 * @param method
 	 * @param uri
 	 * @return
+	 * @throws IOException 
 	 */
-	public static String httpPostRequestMultipart(RestRequestData request, ProgressListener listner ) {
+	public static String httpPostRequestMultipart(RestRequestData request, ProgressListener listner ) throws IOException {
 		
 		String entity = null;
 		HttpPost httpPost = null;
@@ -214,8 +214,6 @@ public class RestfulLib {
 			}
 		}
 
-		long length = multiEntity.getContentLength();
-		
 		httpPost.setEntity(multiEntity);
 	    
 	    DefaultHttpClient defaultHttpClient = new DefaultHttpClient();
@@ -229,8 +227,6 @@ public class RestfulLib {
 		        entity = EntityUtils.toString(httpResponse.getEntity());
 		    }
 		} catch (ClientProtocolException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
 			e.printStackTrace();
 		}
 		

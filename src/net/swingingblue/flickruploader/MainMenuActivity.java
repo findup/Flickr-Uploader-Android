@@ -1,5 +1,6 @@
 package net.swingingblue.flickruploader;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 
@@ -11,9 +12,13 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.ContentResolver;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.res.Resources.NotFoundException;
 import android.database.Cursor;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -103,6 +108,10 @@ public class MainMenuActivity extends Activity {
 		
 		progressDialog = new ProgressDialog(this);
 
+		// 通信可能かチェック
+//		ConnectivityManager cm = (ConnectivityManager)getSystemService(Context.CONNECTIVITY_SERVICE);
+//		NetworkInfo ni = cm.getActiveNetworkInfo();
+		
 		// flickr認証処理
 		autholization();
 		
@@ -247,35 +256,43 @@ public class MainMenuActivity extends Activity {
 	 * Tokenが無い、もしくは期限切れの場合はFlickrの認証ページへリダイレクトする
 	 */
 	private void autholization() {
+		try {
 		
-		flickrLib.getFlob();
-		
-		if (flickrLib.checkToken() == false) {
-			// ダイアログを表示
-			AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
-			alertDialogBuilder.setTitle(R.string.title_required_auth)
-			.setCancelable(false)
-			.setMessage(R.string.notify_required_auth)
-			.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
-				
-				@Override
-				public void onClick(DialogInterface dialog, int which) {
-					redirectFlickr();
-				}
-			})
-			.setNegativeButton(android.R.string.no, new DialogInterface.OnClickListener() {
-				
-				@Override
-				public void onClick(DialogInterface dialog, int which) {
-					dialog.cancel();
-				}
-			})
-			.show();
+			flickrLib.getFlob();
 			
-		} else {
-			// 認証済み
-			Toast.makeText(getApplicationContext(), "authentificated.", Toast.LENGTH_LONG).show();
-			btnUpload.setEnabled(true);
+			if (flickrLib.checkToken() == false) {
+				// ダイアログを表示
+				AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
+				alertDialogBuilder.setTitle(R.string.title_required_auth)
+				.setCancelable(false)
+				.setMessage(R.string.notify_required_auth)
+				.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+					
+					@Override
+					public void onClick(DialogInterface dialog, int which) {
+						redirectFlickr();
+					}
+				})
+				.setNegativeButton(android.R.string.no, new DialogInterface.OnClickListener() {
+					
+					@Override
+					public void onClick(DialogInterface dialog, int which) {
+						dialog.cancel();
+					}
+				})
+				.show();
+				
+			} else {
+				// 認証済み
+//				Toast.makeText(getApplicationContext(), "authentificated.", Toast.LENGTH_LONG).show();
+				btnUpload.setEnabled(true);
+			}
+		} catch (IOException e) {
+			// allmost IOException means Internet connection probrem.
+			e.printStackTrace();
+			btnUpload.setEnabled(false);
+
+			showConnectionErrorDialog();
 		}
 	}
 	
@@ -309,10 +326,17 @@ public class MainMenuActivity extends Activity {
 		// ブラウザからの認証が完了しているか
 		if (requestCode == FLICKR_AUTH_REQUEST_CODE) {
 			// Tokenを保存
-			if (flickrLib.getToken()) {
-				btnUpload.setEnabled(true);
-			} else {
-				Toast.makeText(this, R.string.auth_err, Toast.LENGTH_LONG).show();
+			try {
+				if (flickrLib.getToken()) {
+					btnUpload.setEnabled(true);
+				} else {
+					Toast.makeText(this, R.string.auth_err, Toast.LENGTH_LONG).show();
+				}
+			} catch (IOException e) {
+				e.printStackTrace();
+				btnUpload.setEnabled(false);
+				
+				showConnectionErrorDialog();
 			}
 		}
 		
@@ -328,6 +352,26 @@ public class MainMenuActivity extends Activity {
 		
 		Intent i = new Intent(Intent.ACTION_VIEW, uri);
 		startActivityForResult(i, FLICKR_AUTH_REQUEST_CODE);
+	}
+	
+	/**
+	 * 
+	 */
+	private void showConnectionErrorDialog() {
+
+		AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
+		dialogBuilder.setMessage(R.string.connection_error)
+		.setCancelable(false)
+		.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+			
+			@Override
+			public void onClick(DialogInterface dialog, int which) {
+				// just close dialog. no more something else.
+			}
+		});
+
+		AlertDialog alert = dialogBuilder.create();
+		alert.show();		
 	}
 	
 	
