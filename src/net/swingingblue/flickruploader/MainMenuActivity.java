@@ -108,10 +108,6 @@ public class MainMenuActivity extends Activity {
 		
 		progressDialog = new ProgressDialog(this);
 
-		// 通信可能かチェック
-//		ConnectivityManager cm = (ConnectivityManager)getSystemService(Context.CONNECTIVITY_SERVICE);
-//		NetworkInfo ni = cm.getActiveNetworkInfo();
-		
 		// flickr認証処理
 		autholization();
 		
