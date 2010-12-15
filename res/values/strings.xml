@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     
-<string name="app_name">Flickr Uploader</string>
-<string name="notify_required_auth">flickrのサイトにリダイレクトします。</string>
-<string name="title_required_auth">認証が必要です</string>
-<string name="auth_err">認証できませんでした</string>
-<string name="authorization">認証</string>
-<string name="no_sd_card">SDカードがありません</string>
-<string name="uploading">アップロード中</string>
-<string name="connection_error">flickrへ接続できません。インターネットへの接続を確認してください。</string>
+<string name="app_name">Flickr Uploader for Android</string>
+<string name="notify_required_auth">Redirect to Flickr web site.</string>
+<string name="title_required_auth">Need to authentification.</string>
+<string name="auth_err">Can not authentification.</string>
+<string name="authorization">Authorization</string>
+<string name="no_sd_card">Not found SD card.</string>
+<string name="uploading">Uploading..</string>
+<string name="connection_error">Can not connect flickr.Check your Internet connection.</string>
 </resources>

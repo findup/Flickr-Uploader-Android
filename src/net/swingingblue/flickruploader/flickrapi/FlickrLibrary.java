@@ -28,7 +28,7 @@ import android.util.Log;
 /**
  * Flickr Access API
  * 
- * @author tsugimot
+ * @author findup
  *
  */
 public class FlickrLibrary {
@@ -61,7 +61,7 @@ public class FlickrLibrary {
 	
 	// for Development only.
 	private static final String apiKey ="fabe03eede6638eabe357a8be3ddc84a";
-	private static final String secretKey = "";
+	private static final String secretKey = "a6745c71e56f4f6c";
 	
 	// authentic data
 	private String frob = "";
@@ -71,14 +71,13 @@ public class FlickrLibrary {
 	
 	private Context context;
 	
-	//
-	
+
 	public FlickrLibrary(Context applicationContext) {
 		this.context = applicationContext;
 	}
 
 	/**
-	 * 認証用のFlobを取得する
+	 * get flickr flobs
 	 * @throws IOException 
 	 */
 	public void getFlob() throws IOException {
@@ -103,7 +102,7 @@ public class FlickrLibrary {
 	}
 	
 	/**
-	 * flickeの認証用ページへリダイレクトする
+	 * redirect to flickr auth web pages.
 	 */
 	public Uri redirectAuthPage() {
 		// http://flickr.com/services/auth/?api_key=987654321&perms=write&frob=1a2b3c4d5e&api_sig=6f3870be274f6c49b3e31a0c6728957f
@@ -187,7 +186,8 @@ public class FlickrLibrary {
 	
 	/**
 	 * ファイルをアップロードする
-	 * @param urlList
+	 * @param uri
+	 * @param listner
 	 */
 	public String upload(String uri, final UploadProgressListner listner) {
 		
@@ -282,7 +282,7 @@ public class FlickrLibrary {
 			builder.append(entry.getKey() + entry.getValue());
 		}
 		
-		// MD5変換
+		// MD5
 		try {
 			MessageDigest digest = MessageDigest.getInstance("MD5");
 			try {

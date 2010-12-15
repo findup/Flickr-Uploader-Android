@@ -103,7 +103,6 @@ public class MainMenuActivity extends Activity {
 			}
 		});
 		
-		// flickr ライブラリ初期化
 		flickrLib = new FlickrLibrary(getApplicationContext());
 		
 		progressDialog = new ProgressDialog(this);
@@ -117,7 +116,7 @@ public class MainMenuActivity extends Activity {
 	@Override
 	protected void onResume() {
 		
-		// SDが刺さっているかチェック
+		// check insert SD
 		if (!Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)){
 			Toast.makeText(this, R.string.no_sd_card, Toast.LENGTH_SHORT).show();
 			super.onResume();
@@ -151,7 +150,7 @@ public class MainMenuActivity extends Activity {
 	}
 	
 	/**
-	 * UploadボタンClick
+	 * Click on Upload button
 	 */
 	private OnClickListener uploadBtnListener = new OnClickListener() {
 		
@@ -196,7 +195,7 @@ public class MainMenuActivity extends Activity {
 		}
 
 		/**
-		 * 後処理（UIスレッド）
+		 * 後処理（UI thread）
 		 */
 		@Override
 		protected void onPostExecute(Void result) {
@@ -206,7 +205,7 @@ public class MainMenuActivity extends Activity {
 		}
 
 		/**
-		 * 前処理（UIスレッド）
+		 * 前処理（UI thread）
 		 */
 		@Override
 		protected void onPreExecute() {
@@ -257,7 +256,7 @@ public class MainMenuActivity extends Activity {
 			flickrLib.getFlob();
 			
 			if (flickrLib.checkToken() == false) {
-				// ダイアログを表示
+				// show redirect dialog to flickr
 				AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
 				alertDialogBuilder.setTitle(R.string.title_required_auth)
 				.setCancelable(false)
@@ -279,7 +278,7 @@ public class MainMenuActivity extends Activity {
 				.show();
 				
 			} else {
-				// 認証済み
+				// already authentificated.
 //				Toast.makeText(getApplicationContext(), "authentificated.", Toast.LENGTH_LONG).show();
 				btnUpload.setEnabled(true);
 			}
