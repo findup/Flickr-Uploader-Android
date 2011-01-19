@@ -113,6 +113,9 @@ public class MainMenuActivity extends Activity {
 		super.onCreate(savedInstanceState);
 	}
     
+    /**
+     * 
+     */
 	@Override
 	protected void onResume() {
 		
@@ -159,7 +162,8 @@ public class MainMenuActivity extends Activity {
 			ArrayList<String> checkedList = new ArrayList<String>();
 			// リストの中からチェックがついたものを列挙
 			int count = listadapter.getCount();
-			for (int i = 0; i < count; i++) {
+			for (int i = count - 1; i >= 0; i--) {
+//			for (int i = 0; i < count; i++) {
 				if (listadapter.getItem(i).isCheck()) {
 					checkedList.add(listadapter.getItem(i).getPath());
 				}
@@ -200,6 +204,17 @@ public class MainMenuActivity extends Activity {
 		@Override
 		protected void onPostExecute(Void result) {
 			super.onPostExecute(result);
+			
+			// all checkbox are unchecked.
+			int count = listadapter.getCount();
+			for (int i = count - 1; i >= 0; i--) {
+				if (listadapter.getItem(i).isCheck()) {
+					listadapter.getItem(i).setCheck(false);
+				}
+			}
+			
+			listadapter.notifyDataSetChanged();
+			
 			progressDialog.dismiss();
 			Toast.makeText(getApplicationContext(), "Upload complete.", Toast.LENGTH_SHORT).show();
 		}
