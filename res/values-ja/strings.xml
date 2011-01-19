@@ -9,4 +9,5 @@
 <string name="no_sd_card">SDカードがありません</string>
 <string name="uploading">アップロード中</string>
 <string name="connection_error">flickrへ接続できません。インターネットへの接続を確認してください。</string>
+<string name="upload_complete">アップロードが完了しました</string>
 </resources>

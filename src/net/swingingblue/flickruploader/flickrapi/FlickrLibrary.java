@@ -67,7 +67,7 @@ public class FlickrLibrary {
 	private String frob = "";
 	private String token = "";
 	
-	private static String PREFERENCE_NAME = "flickrData";
+	private static String PREFERENCE_NAME = "flickrlib";
 	
 	private Context context;
 	
@@ -301,7 +301,7 @@ public class FlickrLibrary {
 			e.printStackTrace();
 		}
 		
-		Log.d(LOG_TAG, "token = " + token);
+//		Log.d(LOG_TAG, "token = " + token);
 		
 		return token;
 	}

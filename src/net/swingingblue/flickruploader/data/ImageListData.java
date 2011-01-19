@@ -22,6 +22,28 @@ public class ImageListData {
 	// Checkboxのチェック状態
 	private boolean check;
 	
+	private String fileName;
+	
+	private long takendate;
+	
+	// [_id, _data, _size, _display_name, mime_type, title, date_added, date_modified, description, picasa_id, isprivate, latitude, longitude, datetaken, orientation, mini_thumb_magic, bucket_id, bucket_display_name, micro_thumb_id, sd_serial]
+	
+	public long getTakendate() {
+		return takendate;
+	}
+
+	public void setTakendate(long takendate) {
+		this.takendate = takendate;
+	}
+
+	public String getFileName() {
+		return fileName;
+	}
+
+	public void setFileName(String fileName) {
+		this.fileName = fileName;
+	}
+
 	public Bitmap getBitmap() {
 		return bitmap;
 	}

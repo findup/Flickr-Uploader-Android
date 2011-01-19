@@ -115,7 +115,7 @@ public class ImageListArrayAdapter extends ArrayAdapter<ImageListData> {
 			holder.icon.setImageBitmap(listdata.getBitmap());
 		}
 		
-		holder.text.setText(listdata.getPath().toString());
+		holder.text.setText(listdata.getFileName().toString());
 		holder.checkbox.setChecked(listdata.isCheck());
 		
 		return view;
