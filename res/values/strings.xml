@@ -9,4 +9,5 @@
 <string name="no_sd_card">Not found SD card.</string>
 <string name="uploading">Uploading..</string>
 <string name="connection_error">Can not connect flickr.Check your Internet connection.</string>
+<string name="upload_complete">Upload complete.</string>
 </resources>

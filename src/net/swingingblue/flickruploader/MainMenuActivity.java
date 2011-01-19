@@ -116,6 +116,12 @@ public class MainMenuActivity extends Activity {
 	@Override
 	protected void onResume() {
 		
+		createListData();
+		
+		super.onResume();
+	}
+
+	private void createListData() {
 		// check insert SD
 		if (!Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)){
 			Toast.makeText(this, R.string.no_sd_card, Toast.LENGTH_SHORT).show();
@@ -133,6 +139,10 @@ public class MainMenuActivity extends Activity {
 
 		for (int i = 1; i < count; i++ ) {
 			Log.d(LOG_TAG, "now " + i + " " + cl.getString(1));
+			
+			for (int j = 0; j < cl.getColumnCount();j++) {
+				Log.d(LOG_TAG, "now " + j + " " + cl.getColumnName(j) + ":" + cl.getString(j));
+			}
 
 			ImageListData listdata = new ImageListData();
 			
@@ -140,13 +150,15 @@ public class MainMenuActivity extends Activity {
 			Uri uri = Uri.withAppendedPath(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, cl.getString(0));
 			// リスト用データ組み立て
 			listdata.setUri(uri);
-			listdata.setPath(cl.getString(1));
+			listdata.setPath(cl.getString(cl.getColumnIndex("_data")));
+			listdata.setFileName(cl.getString(cl.getColumnIndex("_display_name")));
+			listdata.setTakendate(cl.getShort(cl.getColumnIndex("datetaken")));
 
 			listadapter.add(listdata);
 			cl.moveToNext();
 		}
 		
-		super.onResume();
+		listview.invalidate();
 	}
 	
 	/**
@@ -201,7 +213,7 @@ public class MainMenuActivity extends Activity {
 		protected void onPostExecute(Void result) {
 			super.onPostExecute(result);
 			progressDialog.dismiss();
-			Toast.makeText(getApplicationContext(), "Upload complete.", Toast.LENGTH_SHORT).show();
+			Toast.makeText(getApplicationContext(), R.string.upload_complete, Toast.LENGTH_SHORT).show();
 		}
 
 		/**
@@ -279,7 +291,6 @@ public class MainMenuActivity extends Activity {
 				
 			} else {
 				// already authentificated.
-//				Toast.makeText(getApplicationContext(), "authentificated.", Toast.LENGTH_LONG).show();
 				btnUpload.setEnabled(true);
 			}
 		} catch (IOException e) {
