@@ -175,7 +175,6 @@ public class MainMenuActivity extends Activity {
 			// リストの中からチェックがついたものを列挙
 			int count = listadapter.getCount();
 			for (int i = count - 1; i >= 0; i--) {
-//			for (int i = 0; i < count; i++) {
 				if (listadapter.getItem(i).isCheck()) {
 					checkedList.add(listadapter.getItem(i).getPath());
 				}
