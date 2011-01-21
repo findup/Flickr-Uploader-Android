@@ -23,6 +23,9 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.PowerManager;
+import android.os.PowerManager.WakeLock;
+import android.os.SystemClock;
 import android.provider.MediaStore;
 import android.util.Log;
 import android.view.Menu;
@@ -189,6 +192,13 @@ public class MainMenuActivity extends Activity {
 
 		private int count = 0;
 		private int size = 0;
+		private PowerManager powerManager;
+		private WakeLock wl;
+		
+		public AsyncUpload() {
+			powerManager = (PowerManager)getSystemService(Context.POWER_SERVICE);
+			wl = powerManager.newWakeLock(PowerManager.SCREEN_BRIGHT_WAKE_LOCK, "flickr_updaloader");
+		}
 		
 		/**
 		 * バックグラウンド処理からのコールバック（UIスレッド）
@@ -228,6 +238,11 @@ public class MainMenuActivity extends Activity {
 			
 			progressDialog.dismiss();
 			Toast.makeText(getApplicationContext(), R.string.upload_complete, Toast.LENGTH_SHORT).show();
+			
+			// activity
+			powerManager.userActivity(SystemClock.uptimeMillis(), false);
+			// wake lock release
+			wl.release();
 		}
 
 		/**
@@ -236,6 +251,9 @@ public class MainMenuActivity extends Activity {
 		@Override
 		protected void onPreExecute() {
 			super.onPreExecute();
+			
+			// do not enter device sleep
+			wl.acquire();
 			
 			progressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
 			progressDialog.setMessage(getResources().getString(R.string.uploading));
